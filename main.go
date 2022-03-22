@@ -32,6 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	webappv1 "my.domain/guestbook/api/v1"
+	webappv1alpha1 "my.domain/guestbook/api/v1alpha1"
 	webappv1beta1 "my.domain/guestbook/api/v1beta1"
 	"my.domain/guestbook/controllers"
 	//+kubebuilder:scaffold:imports
@@ -47,6 +48,7 @@ func init() {
 
 	utilruntime.Must(webappv1beta1.AddToScheme(scheme))
 	utilruntime.Must(webappv1.AddToScheme(scheme))
+	utilruntime.Must(webappv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
 }
 
@@ -54,11 +56,13 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
+	var enableWebhook bool
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
 			"Enabling this will ensure there is only one active controller manager.")
+	flag.BoolVar(&enableWebhook, "webhook", false, "Enable webhook for CRD conversion")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -85,6 +89,25 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Guestbook")
+		os.Exit(1)
+	}
+
+	if enableWebhook {
+		if err = (&webappv1.Guestbook{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Guestbook")
+			os.Exit(1)
+		}
+		if err = (&webappv1beta1.Guestbook{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Guestbook")
+			os.Exit(1)
+		}
+		if err = (&webappv1alpha1.Guestbook{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "CronJob")
+			os.Exit(1)
+		}
+	}
+	if err = (&webappv1alpha1.Guestbook{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "Guestbook")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

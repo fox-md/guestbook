@@ -14,20 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	//apiinterfaces "my.domain/guestbook/api/interfaces"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-type GuestbookSpecAB struct {
-	AlphaField string `json:"alpha,omitempty"`
-	BetaField  string `json:"beta,omitempty"`
-}
 
 // GuestbookSpec defines the desired state of Guestbook
 type GuestbookSpec struct {
@@ -35,9 +29,8 @@ type GuestbookSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Foo is an example field of Guestbook. Edit guestbook_types.go to remove/update
-	Foo       string          `json:"foo,omitempty"`
-	Bar       string          `json:"bar,omitempty"`
-	Converted GuestbookSpecAB `json:"converted,omitempty"`
+	Foo        string `json:"foo,omitempty"`
+	AlphaField string `json:"alphafield,omitempty"`
 }
 
 // GuestbookStatus defines the observed state of Guestbook
@@ -48,7 +41,6 @@ type GuestbookStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:storageversion
 
 // Guestbook is the Schema for the guestbooks API
 type Guestbook struct {

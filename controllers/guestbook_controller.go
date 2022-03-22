@@ -18,13 +18,18 @@ package controllers
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
+	k8serr "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	webappv1beta1 "my.domain/guestbook/api/v1beta1"
+	// webappv1beta1 "my.domain/guestbook/api/v1beta1"
+	webappv1 "my.domain/guestbook/api/v1"
 )
 
 // GuestbookReconciler reconciles a Guestbook object
@@ -50,7 +55,30 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	log := log.FromContext(ctx)
 
 	log.Info("Reconcile started")
-	// TODO(user): your logic here
+
+	book := &webappv1.Guestbook{}
+
+	if err := r.Client.Get(ctx, req.NamespacedName, book); err != nil {
+		// add some debug information if it's not a NotFound error
+		if !k8serr.IsNotFound(err) {
+			log.Error(err, "unable to fetch VmGroup")
+		}
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	bar := "Bar is '" + book.Spec.Bar + "' for " + book.Name
+	foo := "Foo is '" + book.Spec.Foo + "' for " + book.Name
+	log.Info(bar + ";" + foo)
+
+	var mfe metav1.ManagedFieldsEntry
+	mfe = book.ManagedFields[0]
+
+	api := strings.Split(mfe.APIVersion, "/")
+
+	fmt.Println("Created ApiVersion =", api[1])
 
 	return ctrl.Result{}, nil
 }
@@ -58,6 +86,6 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 // SetupWithManager sets up the controller with the Manager.
 func (r *GuestbookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&webappv1beta1.Guestbook{}).
+		For(&webappv1.Guestbook{}).
 		Complete(r)
 }

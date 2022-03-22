@@ -1,0 +1,7 @@
+apiVersion: webapp.my.domain/v1alpha1
+kind: Guestbook
+metadata:
+  name: guestbook-sample
+spec:
+  foo: "AlphaFoo"
+  alphafield: "Some Alpha text"

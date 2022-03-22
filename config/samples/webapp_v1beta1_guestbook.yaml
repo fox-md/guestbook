@@ -4,3 +4,4 @@ metadata:
   name: guestbook-sample-v1beta1
 spec:
   foo: bar
+  betafield: betavalue
